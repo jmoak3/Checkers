@@ -47,7 +47,112 @@ bool Board::isGameOver()
 
 bool Board::hasValidMoves(int color)
 {
-	return true;
+	for(auto p : pieces) 
+	{
+		if (p->color == color)
+		{
+			if (hasValidMoves(p))
+				return true;
+		} 
+	}
+	return false;
+}
+
+bool Board::hasValidMoves(int color, int r, int c)
+{
+	for(auto p : pieces) 
+	{
+		if (p->color == color && p->r == r && p->c == c)
+		{
+			return hasValidMoves(p);
+		} 
+	}
+	return false;
+}
+
+bool Board::hasValidMoves(std::shared_ptr<Piece> p)
+{
+	int dirs[2][2] = {{1,1}, {1,-1}};
+	int sign = p->color == BLACK ? 1 : -1;
+	for (int i=0;i<2;++i)
+	{
+		int nr = sign*dirs[i][0] + p->r; 
+		int nc = sign*dirs[i][1] + p->c;
+		if (pieceAt(nr, nc) == NULL && (nr < 8 || nr > -1))
+			return true;
+	}
+	if (p->king)
+	{
+		sign = -1*sign;
+		//flip direction and try again
+		for (int i=0;i<2;++i)
+		{
+			int nr = sign*dirs[i][0] + p->r; 
+			int nc = sign*dirs[i][1] + p->c;
+			if (pieceAt(nr, nc) == NULL && (nr < 8 || nr > -1))
+				return true;
+		}
+	}
+	return false;
+}
+
+bool Board::hasValidJumps(int color, int r, int c)
+{
+	for(auto p : pieces) 
+	{
+		if (p->color == color && p->r == r && p->c == c)
+		{
+			return hasValidJumps(p);
+		} 
+	}
+	return false;
+}
+
+bool Board::hasValidJumps(std::shared_ptr<Piece> p)
+{
+	int dirs[2][2] = {{2,2}, {2,-2}};
+	int sign = p->color == BLACK ? 1 : -1;
+	for (int i=0;i<2;++i)
+	{
+		for (int i=0;i<2;++i)
+		{
+			int nr = sign*dirs[i][0] + p->r; 
+			int nc = sign*dirs[i][1] + p->c;
+			if (pieceAt(nr, nc) == NULL && (nr < 8 || nr > -1))
+			{
+				//Find the other piece.
+				int jumpedr = ((nr-p->r)/2)+p->r;
+				int jumpedc = ((nc-p->c)/2)+p->c;
+				std::shared_ptr<Piece> j = pieceAt(jumpedr, jumpedc);
+				if (j != NULL && j->color != p->color) 
+				{
+					return true;
+				}
+			}
+		}
+	}
+	if (p->king)
+	{
+		sign = -1*sign;
+		//flip direction and try again
+		for (int i=0;i<2;++i)
+		{
+			int nr = sign*dirs[i][0] + p->r; 
+			int nc = sign*dirs[i][1] + p->c;
+			if (pieceAt(nr, nc) == NULL && (nr < 8 || nr > -1))
+			{
+				//Find the other piece.
+				int jumpedr = ((nr-p->r)/2)+p->r;
+				int jumpedc = ((nc-p->c)/2)+p->c;
+				std::shared_ptr<Piece> j = pieceAt(jumpedr, jumpedc);
+				if (j != NULL && j->color != p->color) 
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
 
 std::shared_ptr<Piece> Board::pieceAt(int r, int c) 
@@ -72,7 +177,7 @@ int Board::move(int color, int r, int c, int nr, int nc)
 		//is the attempted square valid
 		//make sure we're going 'forward'.
 		if ( (pieceAt(nr, nc) != NULL) 
-		  || (nr > 7 || nr < 0 || nc > 7 || nc < 0)
+		  || (nr > 7 || nr < 0)
 		  || (color == BLACK && !p->king && nr <= r)
 	      || (color == WHITE && !p->king && nr >= r) )
 			return INVALID_MOVE;
@@ -139,10 +244,14 @@ void Board::removePiece(int r, int c)
 
 void Board::print() 
 {
-	std::cout << "Printing board..." << std::endl;
 	std::string s = "";
+	s+=" ";
+	for (int i=0;i<8;++i) 
+		s+=std::to_string(i);
+	s+="\n";
 	for (int i=0;i<8;++i) 
 	{
+		s+=std::to_string(i);
 		for (int j=0;j<8;++j) 
 		{
 			std::shared_ptr<Piece> p = pieceAt(i, j);
@@ -165,5 +274,4 @@ void Board::print()
 		s+="\n";
 	}
 	std::cout << s << std::endl;
-	std::cout << "Done!" << std::endl;
 }

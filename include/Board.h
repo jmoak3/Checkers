@@ -17,6 +17,10 @@ public:
 
 	bool isGameOver();
 	bool hasValidMoves(int color);
+	bool hasValidMoves(int color, int r, int c);
+	bool hasValidMoves(std::shared_ptr<Piece> p);
+	bool hasValidJumps(int color, int r, int c);
+	bool hasValidJumps(std::shared_ptr<Piece> p);
 	std::shared_ptr<Piece> pieceAt(int r, int c);
 	int move(int color, int r, int c, int nr, int nc);
 	void removePiece(int r, int c);
